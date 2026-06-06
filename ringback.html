@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bring Back Ringback</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=DM+Mono&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: #0a0a0a;
+    color: #f0ede6;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    overflow-x: hidden;
+  }
+
+  /* NOISE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.4;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding: 1.25rem 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(10,10,10,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .nav-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    letter-spacing: 0.08em;
+    color: #f0ede6;
+    text-decoration: none;
+  }
+  .nav-logo span { color: #ff5c35; }
+  .nav-cta {
+    background: #ff5c35;
+    color: #fff;
+    border: none;
+    padding: 0.55rem 1.4rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s;
+  }
+  .nav-cta:hover { background: #e04a26; }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 8rem 2rem 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-glow {
+    position: absolute;
+    width: 700px;
+    height: 700px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,92,53,0.12) 0%, transparent 70%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -55%);
+    pointer-events: none;
+  }
+  .hero-year {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    color: #ff5c35;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.2s;
+  }
+  .hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(4.5rem, 14vw, 11rem);
+    line-height: 0.9;
+    letter-spacing: 0.02em;
+    color: #f0ede6;
+    opacity: 0;
+    animation: fadeUp 0.7s ease forwards 0.35s;
+  }
+  .hero-title span { color: #ff5c35; }
+  .hero-sub {
+    font-size: clamp(1rem, 2.5vw, 1.25rem);
+    font-weight: 300;
+    color: rgba(240,237,230,0.55);
+    max-width: 520px;
+    line-height: 1.65;
+    margin-top: 1.75rem;
+    opacity: 0;
+    animation: fadeUp 0.7s ease forwards 0.5s;
+  }
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    opacity: 0;
+    animation: fadeUp 0.7s ease forwards 0.65s;
+  }
+  .btn-primary {
+    background: #ff5c35;
+    color: #fff;
+    border: none;
+    padding: 0.85rem 2.2rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.15s;
+    display: inline-block;
+  }
+  .btn-primary:hover { background: #e04a26; transform: translateY(-1px); }
+  .btn-ghost {
+    background: transparent;
+    color: #f0ede6;
+    border: 1px solid rgba(240,237,230,0.25);
+    padding: 0.85rem 2.2rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    text-decoration: none;
+    transition: border-color 0.2s, transform 0.15s;
+    display: inline-block;
+  }
+  .btn-ghost:hover { border-color: rgba(240,237,230,0.6); transform: translateY(-1px); }
+
+  /* MARQUEE */
+  .marquee-wrap {
+    background: #ff5c35;
+    padding: 0.75rem 0;
+    overflow: hidden;
+    white-space: nowrap;
+    margin: 0;
+  }
+  .marquee-inner {
+    display: inline-block;
+    animation: marquee 18s linear infinite;
+  }
+  .marquee-inner span {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 0.15em;
+    color: #fff;
+    padding: 0 2.5rem;
+  }
+  .marquee-inner span::before {
+    content: '♪';
+    margin-right: 2.5rem;
+    opacity: 0.7;
+  }
+
+  /* SECTION */
+  section {
+    padding: 6rem 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    color: #ff5c35;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    line-height: 1;
+    letter-spacing: 0.03em;
+    color: #f0ede6;
+    margin-bottom: 1.25rem;
+  }
+  .section-body {
+    font-size: 1.05rem;
+    color: rgba(240,237,230,0.55);
+    line-height: 1.75;
+    max-width: 540px;
+  }
+
+  /* HOW IT WORKS */
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1px;
+    background: rgba(255,255,255,0.06);
+    margin-top: 4rem;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .step {
+    background: #0a0a0a;
+    padding: 2.5rem 2rem;
+    position: relative;
+  }
+  .step-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 4rem;
+    color: rgba(255,92,53,0.15);
+    line-height: 1;
+    margin-bottom: 1rem;
+  }
+  .step-title {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #f0ede6;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.02em;
+  }
+  .step-body {
+    font-size: 0.875rem;
+    color: rgba(240,237,230,0.45);
+    line-height: 1.65;
+  }
+
+  /* FEATURES */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 3.5rem;
+  }
+  .feature-card {
+    border: 1px solid rgba(255,255,255,0.07);
+    padding: 2rem;
+    background: rgba(255,255,255,0.02);
+    transition: border-color 0.25s, background 0.25s;
+  }
+  .feature-card:hover {
+    border-color: rgba(255,92,53,0.3);
+    background: rgba(255,92,53,0.04);
+  }
+  .feature-icon {
+    font-size: 1.6rem;
+    margin-bottom: 1rem;
+  }
+  .feature-title {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #f0ede6;
+    margin-bottom: 0.5rem;
+  }
+  .feature-body {
+    font-size: 0.875rem;
+    color: rgba(240,237,230,0.45);
+    line-height: 1.65;
+  }
+
+  /* NOSTALGIA STAT BAR */
+  .stat-bar {
+    border-top: 1px solid rgba(255,255,255,0.06);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding: 3rem 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 3rem 5rem;
+    text-align: center;
+    margin: 2rem 0;
+  }
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3.5rem;
+    color: #ff5c35;
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 0.8rem;
+    color: rgba(240,237,230,0.4);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 0.4rem;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* WAITLIST */
+  .waitlist-section {
+    background: #ff5c35;
+    padding: 5rem 2rem;
+    text-align: center;
+  }
+  .waitlist-section .section-title { color: #fff; }
+  .waitlist-section .section-body { color: rgba(255,255,255,0.75); margin: 0 auto 2.5rem; }
+  .waitlist-form {
+    display: flex;
+    max-width: 440px;
+    margin: 0 auto;
+    gap: 0;
+  }
+  .waitlist-input {
+    flex: 1;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-right: none;
+    color: #fff;
+    padding: 0.85rem 1.25rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    outline: none;
+  }
+  .waitlist-input::placeholder { color: rgba(255,255,255,0.5); }
+  .waitlist-input:focus { border-color: rgba(255,255,255,0.7); }
+  .waitlist-btn {
+    background: #0a0a0a;
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 0.85rem 1.75rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: background 0.2s;
+    white-space: nowrap;
+  }
+  .waitlist-btn:hover { background: #1a1a1a; }
+
+  /* FOOTER */
+  footer {
+    padding: 2.5rem 2.5rem;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .footer-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 0.08em;
+    color: rgba(240,237,230,0.4);
+  }
+  .footer-logo span { color: #ff5c35; }
+  .footer-copy {
+    font-size: 0.78rem;
+    color: rgba(240,237,230,0.25);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* PHONE MOCKUP */
+  .phone-wrap {
+    display: flex;
+    justify-content: center;
+    margin-top: 5rem;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.8s;
+  }
+  .phone {
+    width: 220px;
+    background: #161616;
+    border-radius: 36px;
+    border: 2px solid rgba(255,255,255,0.1);
+    padding: 1.5rem 1.25rem;
+    position: relative;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+  }
+  .phone-notch {
+    width: 80px;
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    margin: 0 auto 1.5rem;
+  }
+  .phone-screen {
+    background: #0d0d0d;
+    border-radius: 20px;
+    padding: 1.25rem 1rem;
+    text-align: center;
+  }
+  .phone-caller {
+    font-size: 0.65rem;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-family: 'DM Mono', monospace;
+    margin-bottom: 0.5rem;
+  }
+  .phone-name {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #f0ede6;
+    margin-bottom: 0.25rem;
+  }
+  .phone-number {
+    font-size: 0.7rem;
+    color: rgba(240,237,230,0.35);
+    font-family: 'DM Mono', monospace;
+    margin-bottom: 1.25rem;
+  }
+  .phone-song {
+    background: rgba(255,92,53,0.1);
+    border: 1px solid rgba(255,92,53,0.2);
+    border-radius: 10px;
+    padding: 0.7rem 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 1.25rem;
+  }
+  .phone-song-icon {
+    width: 28px;
+    height: 28px;
+    background: #ff5c35;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+  }
+  .phone-song-title {
+    font-size: 0.65rem;
+    color: #f0ede6;
+    font-weight: 500;
+    text-align: left;
+    line-height: 1.4;
+  }
+  .phone-song-artist {
+    font-size: 0.58rem;
+    color: rgba(240,237,230,0.4);
+    text-align: left;
+  }
+  .phone-bars {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 3px;
+    height: 20px;
+    margin-bottom: 1.25rem;
+  }
+  .phone-bar {
+    width: 3px;
+    background: #ff5c35;
+    border-radius: 2px;
+    animation: soundbar 0.8s ease-in-out infinite alternate;
+  }
+  .phone-bar:nth-child(1) { height: 6px; animation-delay: 0s; }
+  .phone-bar:nth-child(2) { height: 14px; animation-delay: 0.1s; }
+  .phone-bar:nth-child(3) { height: 20px; animation-delay: 0.2s; }
+  .phone-bar:nth-child(4) { height: 12px; animation-delay: 0.3s; }
+  .phone-bar:nth-child(5) { height: 18px; animation-delay: 0.15s; }
+  .phone-bar:nth-child(6) { height: 8px; animation-delay: 0.25s; }
+  .phone-bar:nth-child(7) { height: 16px; animation-delay: 0.05s; }
+  .phone-actions {
+    display: flex;
+    justify-content: space-around;
+  }
+  .phone-action {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+  }
+  .phone-action.decline { background: #d63b2f; }
+  .phone-action.accept { background: #2ab84e; }
+  .phone-action.mute { background: rgba(255,255,255,0.08); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @keyframes soundbar {
+    from { transform: scaleY(0.3); }
+    to { transform: scaleY(1); }
+  }
+
+  @media (max-width: 600px) {
+    nav { padding: 1rem 1.25rem; }
+    section { padding: 4rem 1.25rem; }
+    .waitlist-form { flex-direction: column; }
+    .waitlist-input { border-right: 1px solid rgba(255,255,255,0.3); border-bottom: none; }
+    footer { flex-direction: column; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">Bring<span>Back</span>Ringback</a>
+  <a href="#waitlist" class="nav-cta">Join Waitlist</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-glow"></div>
+  <p class="hero-year">Est. 2025 — The Revival</p>
+  <h1 class="hero-title">Bring<br><span>Back</span><br>Ringback</h1>
+  <p class="hero-sub">Remember when someone calling you meant they heard your vibe first? Ringback tones are back — and this time, you're in control.</p>
+  <div class="hero-actions">
+    <a href="#waitlist" class="btn-primary">Get Early Access</a>
+    <a href="#how" class="btn-ghost">How It Works</a>
+  </div>
+
+  <!-- PHONE MOCKUP -->
+  <div class="phone-wrap">
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <p class="phone-caller">Incoming call</p>
+        <p class="phone-name">Mom 📱</p>
+        <p class="phone-number">+1 (989) 330-7859</p>
+        <div class="phone-song">
+          <div class="phone-song-icon">♪</div>
+          <div>
+            <p class="phone-song-title">Choosing Texas</p>
+            <p class="phone-song-artist">Ella Langley</p>
+          </div>
+        </div>
+        <div class="phone-bars">
+          <div class="phone-bar"></div>
+          <div class="phone-bar"></div>
+          <div class="phone-bar"></div>
+          <div class="phone-bar"></div>
+          <div class="phone-bar"></div>
+          <div class="phone-bar"></div>
+          <div class="phone-bar"></div>
+        </div>
+        <div class="phone-actions">
+          <div class="phone-action decline">✕</div>
+          <div class="phone-action mute">🔇</div>
+          <div class="phone-action accept">✓</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee-inner">
+    <span>YOUR VIBE, THEIR FIRST IMPRESSION</span>
+    <span>RINGBACK TONES ARE BACK</span>
+    <span>SET THE MOOD BEFORE YOU EVEN ANSWER</span>
+    <span>YOUR SONG, YOUR CALL</span>
+    <span>BRING BACK RINGBACK</span>
+    <span>YOUR VIBE, THEIR FIRST IMPRESSION</span>
+    <span>RINGBACK TONES ARE BACK</span>
+    <span>SET THE MOOD BEFORE YOU EVEN ANSWER</span>
+    <span>YOUR SONG, YOUR CALL</span>
+    <span>BRING BACK RINGBACK</span>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stat-bar">
+  <div>
+    <div class="stat-num">$600M</div>
+    <div class="stat-label">Peak Annual Revenue</div>
+  </div>
+  <div>
+    <div class="stat-num">100M+</div>
+    <div class="stat-label">Users at Peak</div>
+  </div>
+  <div>
+    <div class="stat-num">2023</div>
+    <div class="stat-label">Last Carrier Killed It</div>
+  </div>
+  <div>
+    <div class="stat-num">NOW</div>
+    <div class="stat-label">We Bring It Back</div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <p class="section-label">How It Works</p>
+  <h2 class="section-title">Dead Simple.<br>Just Like It Should Be.</h2>
+  <p class="section-body">No carrier nonsense. No $2.99 per song. Just pick your track, set your tone, and let your callers know who they're dealing with.</p>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-title">Pick Your Song</div>
+      <div class="step-body">Search millions of tracks. Set different songs for different contacts — your boss hears classical, your bestie hears whatever's on repeat.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-title">Keep Your Number</div>
+      <div class="step-body">No new SIM, no porting required. Our smart call layer sits behind your existing number seamlessly.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-title">They Call, They Vibe</div>
+      <div class="step-body">The moment someone dials you, your song plays while their phone rings. Pure, carrier-free ringback — the way it was meant to work.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">04</div>
+      <div class="step-title">You Answer</div>
+      <div class="step-body">Music stops, call connects. Clean. No weird delays, no dead air. Just you and your caller — after the vibe check.</div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section>
+  <p class="section-label">Features</p>
+  <h2 class="section-title">Everything The<br>Carriers Never Gave You.</h2>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🎵</div>
+      <div class="feature-title">Unlimited Songs</div>
+      <div class="feature-body">One flat monthly rate. Switch songs anytime. No per-track fees, no expiring licenses.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">👥</div>
+      <div class="feature-title">Caller-Specific Tones</div>
+      <div class="feature-body">Assign different songs to different contacts or groups. Your mom gets one song. Your ex gets silence.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⏰</div>
+      <div class="feature-title">Time-Based Rules</div>
+      <div class="feature-body">Night owl? Set a different vibe for late-night calls. Holiday mode? Automatically switch seasonally.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📱</div>
+      <div class="feature-title">Works on Any Phone</div>
+      <div class="feature-body">iPhone, Android, doesn't matter. If it can make calls, it works. No app install required for your callers.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🎤</div>
+      <div class="feature-title">Custom Audio</div>
+      <div class="feature-body">Upload your own voice memo, a clip from a show, a sound effect. Your number, your rules.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📊</div>
+      <div class="feature-title">Listen Stats</div>
+      <div class="feature-body">See how many times your ringback was heard. Who called. What they listened to. Data that actually matters.</div>
+    </div>
+  </div>
+</section>
+
+<!-- WAITLIST -->
+<div class="waitlist-section" id="waitlist">
+  <p class="section-label" style="color: rgba(255,255,255,0.6);">Limited Early Access</p>
+  <h2 class="section-title">Be First.<br>Set The Tone.</h2>
+  <p class="section-body">We're rolling out to a limited number of early users. Drop your number or email and we'll hit you when it's your turn.</p>
+  <form class="waitlist-form" onsubmit="handleSubmit(event)">
+    <input type="text" class="waitlist-input" placeholder="Phone or email" id="waitlist-input" />
+    <button type="submit" class="waitlist-btn">Join →</button>
+  </form>
+  <p id="waitlist-confirm" style="margin-top: 1rem; font-size: 0.85rem; color: rgba(255,255,255,0.7); display: none;">You're on the list. 🎵</p>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Bring<span>Back</span>Ringback</div>
+  <div class="footer-copy">© 2025 BringBackRingback.com — All rights reserved</div>
+</footer>
+
+<script>
+function handleSubmit(e) {
+  e.preventDefault();
+  const input = document.getElementById('waitlist-input');
+  if (input.value.trim()) {
+    input.value = '';
+    document.getElementById('waitlist-confirm').style.display = 'block';
+  }
+}
+</script>
+
+</body>
+</html>
